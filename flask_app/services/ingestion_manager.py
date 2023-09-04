@@ -1,9 +1,9 @@
 from threading import Thread
-from flask_app.models.vector_database import VectorDatabase
-from flask_app.models.document_loader import DocumentLoader
-from flask_app.models.document_transformer import DocumentTransformer
-from flask_app.models.text_splitter import TextSplitter
-from flask_app.models.utility_functions import UtilityFunctions
+from flask_app.services.vector_database import VectorDatabase
+from flask_app.services.document_loader import DocumentLoader
+from flask_app.services.document_transformer import DocumentTransformer
+from flask_app.services.text_splitter import TextSplitter
+from flask_app.services.utility_functions import UtilityFunctions
 import os
 
 
