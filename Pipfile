@@ -1,0 +1,21 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+flask = "*"
+langchain = "*"
+openai = "*"
+tiktoken = "*"
+flask-sqlalchemy = "*"
+flask-bcrypt = "*"
+flask-socketio = "*"
+eventlet = "*"
+pymysql = "*"
+pydantic = {version = "*", extras = ["email"]}
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"

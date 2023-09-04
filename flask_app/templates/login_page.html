@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="en">
+	<head>
+		<!-- Basic Page Needs
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+		<meta charset="utf-8" />
+		<title>Postulate Chat</title>
+		<meta name="description" content="Login or Register Page" />
+		<meta name="author" content="Evan Schultz" />
+
+		<!-- Mobile Specific Metas
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+
+		<!-- FONT
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+		<link
+			href="//fonts.googleapis.com/css?family=Raleway:400,300,600"
+			rel="stylesheet"
+			type="text/css"
+		/>
+
+		<!-- CSS
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+		<link
+			rel="stylesheet"
+			href="{{ url_for('static', filename='css/normalize.css') }}"
+		/>
+		<link
+			rel="stylesheet"
+			href="{{ url_for('static', filename='css/skeleton.css') }}"
+		/>
+
+		<!-- Favicon
+–––––––––––––––––––––––––––––––––––––––––––––––––– -->
+		<link
+			rel="icon"
+			type="image/png"
+			href="{{ url_for('static', filename='assets/CodingDojoLogo.png') }}"
+		/>
+	</head>
+	<body>
+		<main class="container" style="padding-top: 5vh">
+			<!-- Heading
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+			<div><h1>Postulate Chat</h1></div>
+
+			<!-- Left of Page
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+			<div class="login-container">
+				<div class="container u-border">
+					<!--------------------------  
+					Register Form
+						–––––––––––––––––––– -->
+
+					<h2>Register</h2>
+					{% with messages =
+					get_flashed_messages(category_filter=['register_error',
+					'dashboard_error']) %} {% if messages %}
+					<ul class="flashes">
+						{% for message in messages %}
+						<li>{{ message }}</li>
+						{% endfor %}
+					</ul>
+					{% endif %} {% endwith %}
+
+					<form
+						action="/register"
+						method="POST"
+						class="new-item u-margin-top"
+					>
+						<input
+							type="text"
+							name="first_name"
+							placeholder="First Name"
+							style="width: 100%"
+						/>
+						<input
+							type="text"
+							name="last_name"
+							placeholder="Last Name"
+							style="width: 100%"
+						/>
+						<input
+							type="email"
+							name="email"
+							placeholder="Email"
+							style="width: 100%"
+						/>
+						<input
+							type="password"
+							name="password"
+							placeholder="Password"
+							style="width: 100%"
+						/>
+						<input
+							type="password"
+							name="confirm_password"
+							placeholder="Confirm Password"
+							style="width: 100%"
+						/>
+						<input type="submit" value="Login" />
+					</form>
+				</div>
+
+				<!-- Right of Page
+  –––––––––––––––––––––––––––––––––––––––––––––––––– -->
+
+				<div class="container u-border">
+					<!--------------------------  
+					Login Form
+						–––––––––––––––––––– -->
+
+					<h2>Login</h2>
+
+					{% with messages =
+					get_flashed_messages(category_filter=['login_error',
+					'dashboard_error']) %} {% if messages %}
+					<ul>
+						{% for message in messages %}
+						<li class="flashes">{{ message }}</li>
+						{% endfor %}
+					</ul>
+					{% endif %} {% endwith %}
+
+					<form
+						action="/login"
+						method="POST"
+						class="new-item u-margin-top"
+					>
+						<input
+							type="email"
+							name="email"
+							placeholder="Email"
+							style="width: 100%"
+						/>
+						<input
+							type="password"
+							name="password"
+							placeholder="Password"
+							style="width: 100%"
+						/>
+						<input type="submit" value="Login" />
+					</form>
+				</div>
+			</div>
+		</main>
+	</body>
+</html>
