@@ -1,10 +1,25 @@
-from pydantic import (
-    BaseModel,
-    EmailStr,
-    FieldValidationInfo,
-    field_validator,
-)
+# from pydantic import BaseModel, EmailStr, FieldValidationInfo, field_validator
+from pydantic import BaseModel, EmailStr, validator
 import re
+
+# TODO: Swap code for comments when Chroma updates to pydantic > 2.0.0
+
+VALIDATION_RULES: dict = {
+    "first_name": {
+        "min_length": 2,
+        "error_message": "First Name must be at least 2 characters.",
+    },
+    "last_name": {
+        "min_length": 2,
+        "error_message": "Last Name must be at least 2 characters.",
+    },
+    "password": {
+        "min_length": 8,
+        "regex": re.compile(r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*\W).+$"),
+        "error_message": "Password must have 1 lowercase, 1 uppercase, 1 number, and 1 special character.",
+    },
+    "confirm_password": {"error_message": "The passwords must match."},
+}
 
 
 class UserData(BaseModel):
@@ -30,12 +45,11 @@ class UserData(BaseModel):
     password: str
     confirm_password: str
 
-    @field_validator("first_name")
+    # @field_validator("first_name")
+    @validator("first_name")
     def validate_first_name(cls, value: str) -> str:
         """
         Ensures that the last_name field is not empty.
-
-        If not a ValueError is thrown.
 
         Args:
             value (str): The first_name value.
@@ -46,16 +60,16 @@ class UserData(BaseModel):
         Raises:
             ValueError: If the first_name value is empty.
         """
-        if len(value.strip()) < 2:
-            raise ValueError("First Name must be at least 2 characters.")
+        rule: dict = VALIDATION_RULES["first_name"]
+        if len(value.strip()) < rule["min_length"]:
+            raise ValueError(rule["error_message"])
         return value
 
-    @field_validator("last_name")
+    # @field_validator("last_name")
+    @validator("last_name")
     def validate_last_name(cls, value: str) -> str:
         """
         Ensures that the last_name field is not empty.
-
-        If not a ValueError is thrown.
 
         Args:
             value (str): The last_name value.
@@ -66,11 +80,13 @@ class UserData(BaseModel):
         Raises:
             ValueError: If the last_name value is empty.
         """
-        if len(value.strip()) < 2:
-            raise ValueError("Last Name must be at least 2 characters.")
+        rule = VALIDATION_RULES["last_name"]
+        if len(value.strip()) < rule["min_length"]:
+            raise ValueError(rule["error_message"])
         return value
 
-    @field_validator("password")
+    # @field_validator("password")
+    @validator("password")
     def validate_password(cls, value: str) -> str:
         """
         Ensures the password meets complexity and length requirements.
@@ -81,8 +97,6 @@ class UserData(BaseModel):
         1. Complexity: The password must contain at least 1 lowercase letter, 1 uppercase letter, 1
         number, and 1 special character using a regex.
 
-        If either fail a ValueError is thrown.
-
         Args:
             value (str): The password string to be validated.
 
@@ -92,21 +106,15 @@ class UserData(BaseModel):
         Raises:
             ValueError: If the password does not meet the length or complexity requirements.
         """
-        PASSWORD_REGEX: re.Pattern[str] = re.compile(
-            r"^(?=.*[a-z])(?=.*[A-Z])(?=.*[0-9])(?=.*\W).+$"
-        )
-
-        if not len(value.strip()) >= 8:
-            raise ValueError("Password must be at least 8 characters long.")
-
-        if not PASSWORD_REGEX.match(value):
-            raise ValueError(
-                """Password must have 1 lowercase, 1 uppercase, 1 number,and 1 special character."""
-            )
+        rule = VALIDATION_RULES["password"]
+        if len(value.strip()) < rule["min_length"]:
+            raise ValueError(rule["error_message"])
+        if not rule["regex"].match(value):
+            raise ValueError(rule["error_message"])
         return value
 
-    @field_validator("confirm_password")
-    def validate_confirm_password(cls, value: str, values: FieldValidationInfo) -> str:
+    @validator("confirm_password", pre=True, always=True)
+    def validate_confirm_password(cls, value: str, values) -> str:
         """
         Ensures that the password and confirm_password match.
 
@@ -123,8 +131,30 @@ class UserData(BaseModel):
         Raises:
             ValueError: If the confirm_password value does not match the password.
         """
-
-        if "password" in values.data and values.data["password"] != value:
-            raise ValueError("The passwords must match.")
-
+        rule: dict = VALIDATION_RULES["confirm_password"]
+        if "password" in values and values["password"] != value:
+            raise ValueError(rule["error_message"])
         return value
+
+    # @field_validator("confirm_password")
+    # def validate_confirm_password(cls, value: str, values: FieldValidationInfo) -> str:
+    #     """
+    #     Ensures that the password and confirm_password match.
+
+    #     If not a ValueError is thrown.
+
+    #     Args:
+    #         value (str): The confirm_password value to validate.
+    #         values FieldValidationInfo: An instance of that class containing other previously validated
+    #                                     field values.
+
+    #     Returns:
+    #         str: The validated confirm_password value.
+
+    #     Raises:
+    #         ValueError: If the confirm_password value does not match the password.
+    #     """
+    #     rule: dict = VALIDATION_RULES["confirm_password"]
+    #     if "password" in values.data and values.data["password"] != value:
+    #         raise ValueError(rule["error_message"])
+    #     return value

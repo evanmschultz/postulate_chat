@@ -13,7 +13,9 @@ flask-bcrypt = "*"
 flask-socketio = "*"
 eventlet = "*"
 pymysql = "*"
-pydantic = {version = "*", extras = ["email"]}
+pydantic = "*"
+chromadb = "*"
+flask-cors = "*"
 
 [dev-packages]
 

@@ -1,8 +1,5 @@
 from flask_app import app, socketio, database
-from flask_app.controllers import (
-    users,
-    chats,
-)
+from flask_app.controllers import chats, users, settings
 
 # Create tables
 with app.app_context():

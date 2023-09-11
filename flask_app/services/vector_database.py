@@ -25,7 +25,7 @@ class VectorDatabase:
         self.persist_directory = persist_directory
         self.embedding_function = embedding_function
         # Initialize or load existing Chroma database
-        self.db = Chroma(
+        self.database = Chroma(
             persist_directory=self.persist_directory,
             embedding_function=self.embedding_function,
         )
@@ -42,7 +42,7 @@ class VectorDatabase:
         """
         batch_size = 2000
         for i in range(0, len(documents), batch_size):
-            self.db.add_documents(documents=documents[i : i + batch_size])
+            self.database.add_documents(documents=documents[i : i + batch_size])
 
     def query(self, query_text) -> list:
         """
@@ -54,7 +54,7 @@ class VectorDatabase:
         Returns:
             list: The list of top relevant documents.
         """
-        return self.db.max_marginal_relevance_search(query=query_text, k=5)
+        return self.database.max_marginal_relevance_search(query=query_text, k=5)
 
     # def update_document(self, doc_id, new_doc):
     #     self.db.update_document(doc_id, new_doc)
@@ -72,7 +72,7 @@ class VectorDatabase:
         Returns:
             int: The number of documents.
         """
-        return self.db._collection.count()
+        return self.database._collection.count()
 
 
 # if __name__ == "__main__":

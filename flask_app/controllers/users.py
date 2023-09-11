@@ -53,13 +53,13 @@ def login():
     user_in_db: User | None = User.get_user_by_email(data)
 
     if not user_in_db or not User.check_password(
-        user_in_db.password, request.form["password"]
+        user_in_db.password, request.form["password"]  # type: ignore
     ):
         flash("Invalid Email and/or Password", "login_error")
         return redirect(url_for("login_page"))
 
-    user_id: int = user_in_db.id
-    user_first_name: str = user_in_db.first_name
+    user_id: int = user_in_db.id  # type: ignore
+    user_first_name: str = user_in_db.first_name  # type: ignore
     session["user_id"], session["user_first_name"] = user_id, user_first_name
 
     return redirect("/chat")
