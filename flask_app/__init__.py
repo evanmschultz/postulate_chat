@@ -34,6 +34,7 @@ socketio = SocketIO(
 )  # TODO: Change this to the actual domain for production
 
 # Initialize SQLAlchemy and set auto-commit configurations
+# Update the password for your MySQL server
 app.config[
     "SQLALCHEMY_DATABASE_URI"
 ] = "mysql+pymysql://root:rootroot@localhost/postulate_chat"
