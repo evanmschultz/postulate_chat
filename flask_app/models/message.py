@@ -5,6 +5,7 @@ from sqlalchemy import Column, Integer, Text, String, DateTime, ForeignKey
 from sqlalchemy.orm import relationship
 
 
+# TODO: Make methods in better accordance with SQLAlchemy ORM
 class Message(database.Model):
     """
     Message model for storing individual chat messages.
@@ -25,18 +26,19 @@ class Message(database.Model):
 
     __tablename__: str = "messages"
 
-    id: Column[int] = Column(Integer, primary_key=True, autoincrement=True)
-    content: Column[str] = Column(Text)
-    message_type: Column[str] = Column(
-        String(50)
-    )  # 'system_message', 'user_message', 'ai_message'
-    created_at: Column[datetime] = Column(DateTime, default=datetime.utcnow)
-
+    id = Column(Integer, primary_key=True, autoincrement=True)
+    content = Column(Text)
+    message_type = Column(String(50))  # 'system_message', 'user_message', 'ai_message'
+    created_at = Column(DateTime, default=datetime.utcnow)
     # Foreign key to Chat
-    chat_id: Column[int] = Column(Integer, ForeignKey("chats.id"))
-
+    chat_id = Column(Integer, ForeignKey("chats.id"))
     # Relationship to Chat
     chat = relationship("Chat", back_populates="messages")
+
+    def __init__(self, chat_id: int, content: str, message_type: str) -> None:
+        self.chat_id = chat_id
+        self.content = content
+        self.message_type = message_type
 
     @classmethod
     def add_message(cls, chat_id: int, content: str, message_type: str) -> None:

@@ -6,8 +6,10 @@ from flask import jsonify, render_template, request, redirect, session, flash, u
 
 from flask_app.models.user import User
 from flask_app.models.chat import Chat
-from flask_app.models.message import Message
+
 from flask_app.controllers.route_utilities import is_user_logged_in
+from flask_app.services.ingestion_manager import IngestionManager
+from flask_app.services.vector_database import VectorDatabase
 
 
 @app.route("/settings", methods=["GET"])
@@ -74,3 +76,63 @@ def update_user_info():
 
     flash("Successfully updated user information.", "update_success")
     return redirect(url_for("settings_menu"))
+
+
+# TODO: Update to use user_id from session for VectorDatabase
+@app.route("/ingest_single_url", methods=["POST"])
+def ingest_single_url():
+    print(
+        f"""\n{'_'*80}
+        \nroute called\n
+        \n{'_'*80}
+        """
+    )
+    data = request.json
+    url = data.get("url")  # type: ignore
+    ingestion_manager = IngestionManager()
+    vector_database = VectorDatabase()
+
+    if url is None:
+        return jsonify({"error": "URL is missing"}), 400
+
+    try:
+        ingestion_manager.ingest_single_url(url, vector_database)
+        print(
+            f"""\n{'_'*80}
+            \ningestion try block\n
+            \n{'_'*80}
+            """
+        )
+        return jsonify({"message": f"Successfully ingested {url}"}), 200
+    except Exception as e:
+        print(
+            f"""\n{'_'*80}
+            \ningestion except block\n
+            \n{'_'*80}
+            """
+        )
+        return jsonify({"error": str(e)}), 500
+
+
+# TODO: Update to use user_id from session for VectorDatabase
+@app.route("/ingest_urls", methods=["POST"])
+def ingest_urls_route():
+    print(
+        f"""\n{'_'*80}
+        \nurls called\n
+        \n{'_'*80}
+        """
+    )
+    data = request.json
+    urls = data.get("urls")  # type: ignore
+    ingestion_manager = IngestionManager()
+    vector_database = VectorDatabase()
+
+    if urls is None:
+        return jsonify({"error": "URLs are missing"}), 400
+
+    try:
+        ingestion_manager.ingest_urls(urls, vector_database)
+        return jsonify({"message": "Successfully ingested URLs"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

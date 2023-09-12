@@ -1,34 +1,36 @@
-<!-- User Information Update Section -->
-<div class="container" style="height: 90vh">
-	<!-- Update Chat Name Section -->
-	<section>
-		<h3>Update Chat Name</h3>
-		<form action="/chat/update_name" method="post">
-			<label for="chat-select">Select Chat:</label>
-			<select id="chat-select" name="chat_id">
-				{% for chat in user_chats %}
-				<option value="{{ chat.id }}">
-					{% if chat.name %} {{ chat.name }} {% else %} Chat {{
-					loop.index }} {% endif %}
-				</option>
-				{% endfor %}
-			</select>
+<div class="container">
+	<div class="flex">
+		<!-- User Information Update Section -->
+		<div class="container" style="height: 90vh">
+			<!-- Update Chat Name Section -->
+			<section>
+				<h3>Update Chat Name</h3>
+				<form action="/chat/update_name" method="post">
+					<label for="chat-select">Select Chat:</label>
+					<select id="chat-select" name="chat_id">
+						{% for chat in user_chats %}
+						<option value="{{ chat.id }}">
+							{% if chat.name %} {{ chat.name }} {% else %} Chat
+							{{ loop.index }} {% endif %}
+						</option>
+						{% endfor %}
+					</select>
 
-			<label for="new-chat-name">New Chat Name:</label>
-			<input
-				type="text"
-				id="new-chat-name"
-				name="new_chat_name"
-				style="margin-bottom: 2rem"
-			/>
+					<label for="new-chat-name">New Chat Name:</label>
+					<input
+						type="text"
+						id="new-chat-name"
+						name="new_chat_name"
+						style="margin-bottom: 2rem"
+					/>
 
-			<button type="submit">Update</button>
-		</form>
-	</section>
+					<button type="submit">Update</button>
+				</form>
+			</section>
 
-	<!-- TODO: Update user model to allow user info update -->
-	<!-- Update User Information Section -->
-	<!-- <section>
+			<!-- TODO: Update user model to allow user info update -->
+			<!-- Update User Information Section -->
+			<!-- <section>
         <h3>Update User Information</h3>
         <form action="/update_user_info" method="post">
             <label for="first-name">First Name:</label>
@@ -60,8 +62,8 @@
         </form>
     </section> -->
 
-	<!-- TODO: Add update password functionality -->
-	<!-- <section class="update-user-info">
+			<!-- TODO: Add update password functionality -->
+			<!-- <section class="update-user-info">
         <h3>Update User Information</h3>
         <form action="/update-user-info" method="post">
 
@@ -90,8 +92,42 @@
         </form>
     </section> -->
 
-	<!-- Logout Button -->
-	<button onclick="location.href='/logout'" style="margin-top: auto">
-		Logout
-	</button>
+			<!-- Logout Button -->
+			<button onclick="location.href='/logout'" style="margin-top: auto">
+				Logout
+			</button>
+		</div>
+
+		<div class="container" style="height: 90vh">
+			<!-- Single URL Ingestion Form -->
+			<section>
+				<h3>Ingest Single URL</h3>
+				<form id="single-url-ingest-form">
+					<label for="single-url">Enter a URL:</label>
+					<input
+						type="text"
+						id="single-url"
+						name="single-url"
+						style="width: 80%; margin-bottom: 2rem"
+					/>
+					<button type="submit">Ingest</button>
+				</form>
+			</section>
+
+			<!-- URL Ingestion Form -->
+			<section>
+				<h3>Ingest URLs</h3>
+				<form id="url-ingest-form">
+					<label for="urls">Enter URLs (comma-separated):</label>
+					<input
+						type="text"
+						id="urls"
+						name="urls"
+						style="width: 80%; margin-bottom: 2rem"
+					/>
+					<button type="submit">Ingest</button>
+				</form>
+			</section>
+		</div>
+	</div>
 </div>

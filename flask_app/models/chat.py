@@ -12,6 +12,7 @@ from flask_app.models.message import Message
 from sqlalchemy.exc import SQLAlchemyError
 
 
+# TODO: Make methods in better accordance with SQLAlchemy ORM
 class Chat(database.Model):
     """
     Chat model for storing chat sessions.
@@ -65,11 +66,11 @@ class Chat(database.Model):
         return messages
 
     @classmethod
-    def create_new_chat(cls, user_id) -> int:
+    def create_new_chat(cls, user_id: int) -> int:
         print(
             f"""\n{'_'*80}\nCreating new conversation in the database...\n\n{'_'*80}"""
         )
-        new_chat = cls(user_id=user_id)
+        new_chat = cls(user_id=user_id)  # type: ignore
         database.session.add(new_chat)
         database.session.commit()
         return new_chat.id  # type: ignore
@@ -79,7 +80,7 @@ class Chat(database.Model):
         print(
             f"""\n{'_'*80}\nGetting conversation with id: {chat_id} from the database...\n\n{'_'*80}"""
         )
-        return cls.query.filter_by(id=chat_id).first()
+        return cls.query.filter_by(id=chat_id).first()  # type: ignore
 
     @classmethod
     def delete_chat_by_id(cls, chat_id: int) -> bool:

@@ -8,8 +8,11 @@ from flask_app import database
 from sqlalchemy import Column, Integer, String, DateTime
 from sqlalchemy.orm import relationship, joinedload
 from flask_app.models.chat import Chat
+from flask_app.services.vector_database import VectorDatabase
 
 
+# TODO: Make methods in better accordance with SQLAlchemy ORM
+# TODO: Update schema to allow full CRUD operations
 class User(database.Model):
     """
     The User class is a model for storing user information and includes methods
@@ -71,7 +74,7 @@ class User(database.Model):
         Returns:
             User: User object if found, None otherwise.
         """
-        return cls.query.filter_by(email=email).first()
+        return cls.query.filter_by(email=email).first()  # type: ignore
 
     @classmethod
     def get_user_by_id(cls, user_id: int) -> "User":
@@ -84,7 +87,7 @@ class User(database.Model):
         Returns:
             User: User object if found, None otherwise.
         """
-        return cls.query.get(user_id)
+        return cls.query.get(user_id)  # type: ignore
 
     @classmethod
     def get_all_chat_ids_by_user_id(cls, user_id) -> list[int]:
@@ -115,7 +118,7 @@ class User(database.Model):
             list[Chat]: List of Chat objects if found, None otherwise.
         """
         return (
-            cls.query.options(joinedload(cls.chats)).filter_by(id=user_id).first().chats
+            cls.query.options(joinedload(cls.chats)).filter_by(id=user_id).first().chats  # type: ignore
         )
 
     @classmethod
@@ -141,11 +144,12 @@ class User(database.Model):
             last_name=user_data["last_name"],
             email=user_data["email"],
             password=hashed_password,
-        )
+        )  # type: ignore
         database.session.add(new_user)
         database.session.commit()
         return new_user.id  # type: ignore
 
+    # TODO: Update for full CRUD operations
     @classmethod
     def update_user_by_id(cls, user_id: int, user_data: dict) -> bool:
         """
@@ -177,6 +181,7 @@ class User(database.Model):
         database.session.commit()
         return True
 
+    # TODO: Update for full CRUD operations
     @classmethod
     def update_password_by_id(
         cls, user_id: int, old_password: str, new_password: str

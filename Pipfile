@@ -16,6 +16,7 @@ pymysql = "*"
 pydantic = "*"
 chromadb = "*"
 flask-cors = "*"
+bs4 = "*"
 
 [dev-packages]
 

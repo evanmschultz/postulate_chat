@@ -73,27 +73,3 @@ class VectorDatabase:
             int: The number of documents.
         """
         return self.database._collection.count()
-
-
-# if __name__ == "__main__":
-#     # Initialize the database with a persistent directory
-#     vector_db = VectorDatabase()
-
-#     urls: list = [
-#         "https://api.python.langchain.com/en/latest/api_reference.html#module-langchain",
-#         "https://python.langchain.com/docs/get_started",
-#         "https://python.langchain.com/docs/use_cases",
-#         "https://python.langchain.com/docs/integrations",
-#         "https://python.langchain.com/docs/modules",
-#         "https://python.langchain.com/docs/guides",
-#         "https://python.langchain.com/docs/ecosystem",
-#         "https://python.langchain.com/docs/additional_resources",
-#         "https://python.langchain.com/docs/community",
-#     ]
-
-#     IngestionManager(urls=urls, vector_db=vector_db).ingest_urls()
-
-#     query_result = vector_db.query("What embeddings models work with Langchain?")
-#     print("Query Result:", query_result)
-#     print(f"""\n{'_'*80}\nLength Query\n{len(query_result)}\n{'_'*80}""")
-#     print("Number of documents:", vector_db.count())
