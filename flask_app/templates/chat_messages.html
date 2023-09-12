@@ -1,0 +1,37 @@
+<!-- Chat Messages -->
+<div
+	id="chat-messages"
+	class="chat-messages"
+	style="overflow-y: scroll; max-height: calc(100vh - 50px)"
+>
+	{% for message in chat_history %}
+	<div style="border: 1px solid #ccc; padding: 10px; margin-bottom: 15px">
+		<div class="message-content">
+			<strong
+				>{% if message.message_type == 'user_message' %}You{% else
+				%}AI{% endif %}:
+			</strong>
+			{{ message.content|safe }}
+		</div>
+	</div>
+	{% endfor %}
+</div>
+
+<!-- Input Field -->
+<div class="fixed-bottom-container">
+	<form method="post" class="input-form">
+		<input
+			type="hidden"
+			id="chat-id"
+			name="chat_id"
+			value="{{ chat_id }}"
+		/>
+		<textarea
+			id="chat-input"
+			name="chat-input"
+			class="chat-input"
+			placeholder="Type your message here. Press `cmd` or `cntrl` + `enter` to send..."
+		></textarea>
+		<button type="submit">Send</button>
+	</form>
+</div>
