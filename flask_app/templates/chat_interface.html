@@ -36,7 +36,7 @@
 			>
 				<div style="overflow-y: auto; max-height: calc(100vh - 50px)">
 					<div style="margin-bottom: 1rem; font-size: 2rem">
-						<a href="{{ url_for('chat_interface') }}">+New Chat</a>
+						<a href="#" id="create-new-chat">+New Chat</a>
 					</div>
 					<ul>
 						{% set ns = namespace(counter=user_chats|length) %} {%
@@ -108,7 +108,14 @@
 			</main>
 		</div>
 
-		<script src="{{ url_for('static', filename='js/script.js') }}"></script>
+		<script src="{{ url_for('static', filename='js/common.js') }}"></script>
+		<!-- Always included -->
+
+		{% if settings %}
+		<script src="{{ url_for('static', filename='js/settings_menu.js') }}"></script>
+		{% else %}
+		<script src="{{ url_for('static', filename='js/chat_messages.js') }}"></script>
 		<script src="{{ url_for('static', filename='js/prism.js') }}"></script>
+		{% endif %}
 	</body>
 </html>
