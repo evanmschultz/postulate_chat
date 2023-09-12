@@ -57,6 +57,45 @@ def chat_interface(chat_id: int | None) -> Response | str:
     )
 
 
+@app.route("/create_chat", methods=["POST"])
+def create_new_chat() -> Response:
+    """
+    Handles the creation of a new chat via AJAX.
+
+    Returns:
+        Response: JSON response containing the new chat ID or an error message.
+    """
+    print(
+        f"""\n{'_'*80}
+        \nnew route called
+        \n{'_'*80}
+        """
+    )
+    # Check if the user is logged in
+    redirect_user = is_user_logged_in()
+    if redirect_user:
+        # Assuming that is_user_logged_in() returns a JSON response
+        return redirect_user
+
+    # Get the user ID from the session
+    user_id: int = session["user_id"]
+
+    # Create a new chat
+    chat_id: int = Chat.create_new_chat(user_id)
+
+    # Update the session
+    session["current_chat_id"] = chat_id
+
+    # Return a JSON response
+    return jsonify(
+        {
+            "status": "success",
+            "chat_id": chat_id,
+            "redirect": url_for("chat_interface", chat_id=chat_id),
+        }
+    )
+
+
 @app.route("/chat/ajax_send_message", methods=["POST"])
 def ajax_send_message() -> Response:
     """
