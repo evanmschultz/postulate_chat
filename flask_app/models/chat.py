@@ -39,7 +39,6 @@ class Chat(database.Model):
     session_id = Column(String(50))
 
     user_id = Column(Integer, ForeignKey("users.id"))
-    memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 
     # Relationships
     messages = relationship("Message", back_populates="chat")
@@ -50,7 +49,9 @@ class Chat(database.Model):
     memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
     conversational_chain = ConversationalRetrievalChain.from_llm(
         ChatOpenAI(temperature=0.5, model="gpt-4"),
-        vector_db.database.as_retriever(),
+        vector_db.database.as_retriever(
+            search_type="mmr", search_kwargs={"k": 5, "fetch_k": 50}
+        ),
         memory=memory,
     )
 
