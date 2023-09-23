@@ -49,6 +49,8 @@ from flask import Flask
 from flask_socketio import SocketIO
 from flask_sqlalchemy import SQLAlchemy
 import pymysql
+from flask_socketio import SocketIO
+from flask_cors import CORS
 
 
 # Function to create database if it doesn't exist
@@ -85,9 +87,14 @@ pymysql.install_as_MySQLdb()
 app = Flask(__name__)
 app.secret_key = "secret_key"
 
+# Initialize SocketIO with the Flask app
+socketio = SocketIO(app, cors_allowed_origins="*")
+
+CORS(app)
+
 # Initialize SocketIO and attach it to the Flask app
 socketio = SocketIO(
-    app, cors_allowed_origins="*"
+    app, cors_allowed_origins="*", engineio_logger=True
 )  # TODO: Change this to the actual domain for production
 
 # Initialize SQLAlchemy and set auto-commit configurations

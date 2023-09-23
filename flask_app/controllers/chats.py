@@ -9,6 +9,17 @@ from flask_app.models.chat import Chat
 from flask_app.models.message import Message
 from flask_app.controllers.route_utilities import is_user_logged_in
 
+from flask_socketio import emit
+
+from langchain.callbacks import AsyncIteratorCallbackHandler
+from langchain.chat_models import ChatOpenAI
+from langchain.schema import HumanMessage
+import asyncio
+
+
+# Websocket sids are stored globally for now
+user_sids = {}
+
 
 @app.route("/chat", defaults={"chat_id": None}, methods=["GET", "POST"])
 @app.route("/chat/<int:chat_id>", methods=["GET", "POST"])
@@ -71,22 +82,15 @@ def create_new_chat() -> Response:
         \n{'_'*80}
         """
     )
-    # Check if the user is logged in
     redirect_user = is_user_logged_in()
     if redirect_user:
-        # Assuming that is_user_logged_in() returns a JSON response
+        # TODO: is_user_logged_in() returns a JSON response
         return redirect_user
 
-    # Get the user ID from the session
     user_id: int = session["user_id"]
-
-    # Create a new chat
     chat_id: int = Chat.create_new_chat(user_id)
-
-    # Update the session
     session["current_chat_id"] = chat_id
 
-    # Return a JSON response
     return jsonify(
         {
             "status": "success",
@@ -96,13 +100,53 @@ def create_new_chat() -> Response:
     )
 
 
-@app.route("/chat/ajax_send_message", methods=["POST"])
-def ajax_send_message() -> Response:
+async def send_message(content: str, sid: str):
     """
-    Handles AJAX request for sending a chat message.
+    Asynchronously sends a message using the ChatOpenAI model. Emits the generated tokens
+    to the connected Socket.IO client.
+
+    Args:
+        content (str): The content of the message to send.
+        sid (str): The session ID (SID) for the Socket.IO connection.
+    """
+    callback = AsyncIteratorCallbackHandler()
+    model = ChatOpenAI(streaming=True, verbose=True, callbacks=[callback])
+    task = asyncio.create_task(
+        model.agenerate(messages=[[HumanMessage(content=content)]])
+    )
+
+    try:
+        async for token in callback.aiter():
+            socketio.emit("new_token", {"token": token}, room=sid)
+            print(f"""\n{'_'*80}\nmessage\n{token}\n{'_'*80}""")
+    except Exception as e:
+        print(f"Caught exception: {e}")
+    finally:
+        callback.done.set()
+        socketio.emit("stream_end", {"message": "Stream has ended."}, room=sid)
+
+    await task
+
+
+@socketio.on("connect")
+def handle_connect():
+    """
+    Handles new WebSocket connection. Stores the session ID (SID) for the connected user.
+    """
+    print("Client connected: " + request.sid)  # type: ignore
+    user_id = session.get("user_id")
+    if user_id:
+        user_sids[user_id] = request.sid  # type: ignore
+
+
+@app.route("/chat/ajax_send_message", methods=["POST"])
+def ajax_send_message():
+    """
+    Handles AJAX request for sending a chat message. Initiates a new event loop to run
+    the send_message coroutine.
 
     Returns:
-        Response: JSON response containing the bot's reply and the user's input.
+        Response: JSON response indicating the status of the streaming process.
     """
     redirect_user: Response | None = is_user_logged_in()
     if redirect_user:
@@ -117,10 +161,62 @@ def ajax_send_message() -> Response:
         flash("Unauthorized.", "error")
         return jsonify({"status": "error", "message": "Unauthorized"})
 
-    user_query: str = request.form.get("chat-input")  # type: ignore
-    answer: str | None = Chat.generate_ai_response(chat_id, user_query)
+    user_query = request.form.get("chat-input")  # type: ignore
+    chat_id = request.form.get("chat_id")  # type: ignore
+    sid = user_sids.get(user_id)
+    if not sid:
+        return jsonify({"status": "error", "message": "SID not found"})
 
-    return jsonify({"bot_response": answer, "user_input": user_query})
+    # Creating a new event loop and setting it
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+
+    # Running the coroutine within the new event loop
+    loop.run_until_complete(send_message(user_query, sid))  # type: ignore
+
+    return jsonify({"status": "streaming_started"})
+
+
+# @app.route("/chat/ajax_send_message", methods=["POST"])
+# def ajax_send_message() -> Response:
+#     """
+#     Handles AJAX request for sending a chat message.
+
+#     Returns:
+#         Response: JSON response containing the bot's reply and the user's input.
+#     """
+#     redirect_user: Response | None = is_user_logged_in()
+#     if redirect_user:
+#         return redirect_user
+#     chat_id: int = int(request.form.get("chat_id"))  # type: ignore
+#     user_id: int = session["user_id"]
+#     if not chat_id:
+#         flash("Chat not found.", "error")
+#         return jsonify({"status": "error", "message": "Chat not found"})
+
+#     if not user_id == Chat.get_chat_by_id(chat_id).user_id:
+#         flash("Unauthorized.", "error")
+#         return jsonify({"status": "error", "message": "Unauthorized"})
+
+#     user_query: str = request.form.get("chat-input")  # type: ignore
+
+#     def stream_response(chat_id: int, user_query: str, sid: int) -> None:
+#         """
+#         A background task for streaming the AI response token by token.
+
+#         Args:
+#             chat_id (int): The chat identifier.
+#             user_query (str): The user's input query.
+#             sid (int): The session ID.
+#         """
+#         with app.app_context():
+#             for token in Chat.generate_ai_response(chat_id, user_query):  # type: ignore
+#                 socketio.emit("new_token", {"token": token}, namespace="/", room=sid)
+
+#     sid = session["user_id"]
+#     socketio.start_background_task(stream_response, chat_id, user_query, sid)
+
+#     return jsonify({"status": "streaming_started"})
 
 
 @app.route("/chat/delete/<int:chat_id>", methods=["POST"])

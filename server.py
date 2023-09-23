@@ -1,3 +1,8 @@
+# Monkey-patch for async capabilities
+import eventlet
+
+eventlet.monkey_patch()
+
 from flask_app import app, socketio, database
 from flask_app.controllers import chats, users, settings
 

@@ -1,7 +1,34 @@
-// This script is specific to the chat messages interface
+// Initialize Socket.IO connection
+const socket = io.connect('http://127.0.0.1:5000');
+
+// Unique identifier for the current AI message content box
+let currentAiMessageContentId = null;
+
+// Place this near the top of your script, or in a location where it will be run
+console.log('Running regex test...');
+const regexTestString = '```python\ncode here\n```';
+const regex = /```(\w+)?\n([\s\S]*?)```/gm;
+const match = regex.exec(regexTestString);
+console.log('Regex test match:', match);
+
+// function formatCodeBlocks(inputString) {
+// 	console.log('Input to formatCodeBlocks:', inputString); // Log the input string
+// 	let formattedString = inputString.replace(
+// 		/```(\w+)?\n([\s\S]*?)```/gm,
+// 		function (_, lang, code) {
+// 			return `<pre><code class="language-${
+// 				lang || 'none'
+// 			}">${code}</code></pre>`;
+// 		}
+// 	);
+// 	formattedString = formattedString.replace(/`([^`]+)`/gm, '<code>$1</code>');
+// 	console.log('Output from formatCodeBlocks:', formattedString); // Log the output string
+// 	return formattedString;
+// }
 
 // Function to format code blocks in a given string
 function formatCodeBlocks(inputString) {
+	console.log('Input to formatCodeBlocks:', inputString);
 	let formattedString = inputString.replace(
 		/```(\w+)?\n([\s\S]*?)```/gm,
 		function (_, lang, code) {
@@ -10,99 +37,127 @@ function formatCodeBlocks(inputString) {
 			}">${code}</code></pre>`;
 		}
 	);
-
-	// Replace inline code wrapped in single backticks with <code> tags
 	formattedString = formattedString.replace(/`([^`]+)`/gm, '<code>$1</code>');
-
-	// Return the formatted string
+	console.log('Output from formatCodeBlocks:', formattedString);
 	return formattedString;
 }
 
 // Function to scroll the chat messages div to the bottom
 function scrollToBottom(element) {
+	console.log('Scrolling to bottom.');
 	element.scrollTop = element.scrollHeight;
 }
 
-// Extract the form submission logic into a separate function
+// Function to append received tokens to the chat
+function appendTokenToChat(token, aiMessageContentId) {
+	console.log('Appending token: ', token);
+	// Use the existing unique ID for appending tokens
+	const aiMessageElement = document.getElementById(aiMessageContentId);
+	if (aiMessageElement) {
+		aiMessageElement.textContent += token + ' ';
+	}
+}
+
+// Temporary storage for accumulating tokens
+let accumulatedTokens = '';
+
+// Listen for new_token event
+socket.on('new_token', function (data) {
+	console.log('Received new token from server.');
+	const token = data.token;
+	accumulatedTokens += token; // Directly append tokens
+	console.log('Current state of accumulatedTokens:', accumulatedTokens);
+
+	// Use the existing unique identifier for appending tokens
+	appendTokenToChat(token, currentAiMessageContentId);
+});
+
+// Listen for stream_end event
+socket.on('stream_end', function (data) {
+	console.log('Stream has ended from server.');
+	console.log('Final state of accumulatedTokens:', accumulatedTokens);
+
+	// Format the accumulated tokens
+	const formattedContent = formatCodeBlocks(accumulatedTokens);
+	console.log('Formatted content:', formattedContent);
+
+	// Append the formatted content to chat
+	const aiMessageElement = document.getElementById(currentAiMessageContentId);
+	if (aiMessageElement) {
+		aiMessageElement.innerHTML = formattedContent;
+		aiMessageElement.innerHTML = formattedContent;
+		Prism.highlightAll();
+	}
+
+	console.log('HTML encoded formattedContent:', escape(formattedContent));
+
+	// Clear the accumulatedTokens string for the next stream
+	accumulatedTokens = '';
+	scrollToBottom(chatMessages);
+});
+
+// Perform form submission
 function performFormSubmission(event, chatInput, chatMessages) {
-	// Prevent the default form submission behavior
+	console.log('Form submission triggered.');
 	event.preventDefault();
 
-	// Clear the chat input and store its value for later use
 	const userInput = chatInput.value;
 	chatInput.value = '';
 
-	// Create and append the user's message immediately for a responsive UI
 	const userMessage = document.createElement('p');
 	userMessage.innerHTML = `<strong>You:</strong> ${userInput}`;
 	userMessage.style.border = '1px solid #ccc';
 	userMessage.style.padding = '10px';
 	chatMessages.appendChild(userMessage);
 
-	// Create and append a loading message
-	const loadingMessage = document.createElement('p');
-	loadingMessage.innerHTML = '<strong>AI:</strong> Loading...';
-	loadingMessage.style.border = '1px solid #ccc';
-	loadingMessage.style.padding = '10px';
-	chatMessages.appendChild(loadingMessage);
+	// Create a new unique identifier for the AI message content box
+	currentAiMessageContentId = 'ai-message-content-' + new Date().getTime();
 
-	// Scroll to the top after loading message is appended
+	const aiMessage = document.createElement('p');
+	aiMessage.style.border = '1px solid #ccc';
+	aiMessage.style.padding = '10px';
+
+	const aiLabel = document.createElement('strong');
+	aiLabel.textContent = 'AI:';
+	aiMessage.appendChild(aiLabel);
+
+	const aiSpace = document.createElement('span');
+	aiSpace.textContent = ' ';
+	aiMessage.appendChild(aiSpace);
+
+	const aiMessageContent = document.createElement('span');
+	aiMessageContent.id = currentAiMessageContentId; // Set the unique ID
+	aiMessage.appendChild(aiMessageContent);
+
+	chatMessages.appendChild(aiMessage);
+
 	scrollToBottom(chatMessages);
 
-	// Create a FormData object and append the user input
 	const chatId = document.getElementById('chat-id').value;
 	const formData = new FormData();
 	formData.append('chat-input', userInput);
 	formData.append('chat_id', chatId);
 
-	// Send an AJAX POST request to send the message
 	fetch('/chat/ajax_send_message', {
 		method: 'POST',
 		body: formData
 	})
-		.then((response) => response.json()) // Parse JSON response
+		.then((response) => response.json())
 		.then((data) => {
-			// Remove the loading message
-			chatMessages.removeChild(loadingMessage);
-
-			// Format and append the bot's message
-			const formattedBotResponse = formatCodeBlocks(data.bot_response);
-			const botMessage = document.createElement('p');
-			botMessage.innerHTML = `<strong>Bot:</strong> ${formattedBotResponse}`;
-			botMessage.style.border = '1px solid #ccc';
-			botMessage.style.padding = '10px';
-			chatMessages.appendChild(botMessage);
-
-			// Trigger Prism to highlight code blocks
-			Prism.highlightAll();
-
-			// Scroll the chat messages div to the bottom again
-			chatMessages.scrollTop = chatMessages.scrollHeight;
-
-			// Send an AJAX POST request to update the session
-			fetch('/chat/update_session', {
-				method: 'POST',
-				headers: {
-					'Content-Type': 'application/json'
-				},
-				body: JSON.stringify({
-					formatted_response: formattedBotResponse
-				})
-			});
+			if (data.status === 'streaming_started') {
+				// You can show a loading indicator here if you want
+			}
 		});
 }
 
 document.addEventListener('DOMContentLoaded', function () {
-	/// Select all message blocks with the class 'message-content'
 	const messageBlocks = document.querySelectorAll('.message-content');
-	// Loop through each message block to format its content
 	messageBlocks.forEach((block) => {
-		const originalContent = block.innerHTML; // Store the original content
-		const formattedContent = formatCodeBlocks(originalContent); // Apply formatting
-		block.innerHTML = formattedContent; // Replace original content with formatted content
+		const originalContent = block.innerHTML;
+		const formattedContent = formatCodeBlocks(originalContent);
+		block.innerHTML = formattedContent;
 	});
 
-	// Handling delete buttons: Now using form submission
 	const deleteButtons = document.querySelectorAll('.delete-chat-button');
 	deleteButtons.forEach((button) => {
 		button.addEventListener('click', function () {
@@ -111,28 +166,22 @@ document.addEventListener('DOMContentLoaded', function () {
 		});
 	});
 
-	// Scroll the chat messages div to the bottom
 	const chatMessages = document.getElementById('chat-messages');
 	scrollToBottom(chatMessages);
 
-	// Get chat input and chat messages elements by their IDs
 	const chatInput = document.getElementById('chat-input');
 
-	// Add an event listener for input events on chat input
 	chatInput.addEventListener('input', function () {
-		// Dynamically adjust the height based on the scrollHeight
 		this.style.height = 'auto';
 		this.style.height = this.scrollHeight + 'px';
 	});
 
-	// Add a keydown event listener
 	chatInput.addEventListener('keydown', function (event) {
 		if (event.key === 'Enter' && (event.metaKey || event.ctrlKey)) {
 			performFormSubmission(event, chatInput, chatMessages);
 		}
 	});
 
-	// Add a submit event listener
 	document
 		.querySelector('.input-form')
 		.addEventListener('submit', function (event) {
